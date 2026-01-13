@@ -17,8 +17,12 @@ public class Ball {
         canvas = c;
         BallSpeed = 5;
         ballHeath = 3;
-        
     }
+     public void display() {
+        canvas.circle(X, Y, Size);
+        canvas.fill(color);
+     }
+     
 
 
 }
