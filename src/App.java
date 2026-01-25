@@ -6,11 +6,11 @@ import processing.core.*;
 import processing.opengl.PShapeOpenGL;
 
 public class App extends PApplet {
-    ArrayList<Ball> balls;
+
     ArrayList<Bullet> bullets;
-    private int ballHeath;
+    private boolean space = true;
+    private int ballHeath = 3;
     private PImage balll;
-    private boolean space;
     private double highScore;
     private float speed = 90;
     private double begin;
@@ -20,6 +20,7 @@ public class App extends PApplet {
     private int x = 66;
     private Ball ball;
     private int y = 530;
+    private boolean gameOver;
 
     public static void main(String[] args) {
         PApplet.main("App");
@@ -28,11 +29,12 @@ public class App extends PApplet {
     public void setup() {
         // add fetures such as a image and shape, this also creates arraylists
         bullets = new ArrayList<>();
-        balls = new ArrayList<>();
+
         balll = loadImage("Screenshot 2026-01-14 200554.png");
         balll.resize(width, height);
-        Ball ball = new Ball(x, y, this, ballHeath);
-        balls.add(ball);
+        ball = new Ball(x, y, this, ballHeath);
+
+        ball.updateColor();
         Bullets();
         // music = new SoundFile(this, )
     }
@@ -58,28 +60,47 @@ public class App extends PApplet {
 
     }
 
-    public void death(){
-        //  float distanceFromBullet = canvas.dist(x, y, X2, Y2);
-       for(Bullet bullet: bullets){
-        if (bullet.touches(ball)) {
-            ballHeath--;
-            println("HP decreased! HP = " + ballHeath);
-        }
-
+    // Ai help me come up with (
+    public void restartGame() {
+        bullets.clear();
+        Bullets();
+        gameOver = false;
+        ballHeath = 3;
+        begin = millis();
+        ball = new Ball(x, y, this, ballHeath);
+        // )
     }
-        // if (distanceFromBullet <  / 2) {
-        //     ballHeath--;
-        //     System.out.println("hp decreased");
+
+    public void death() {
+        // float distanceFromBullet = canvas.dist(x, y, X2, Y2);
+        for (int i = bullets.size() - 1; i >= 0; i--) {
+            Bullet bullet = bullets.get(i);
+            if (bullet.touches(ball)) {
+                ballHeath--;
+                bullets.remove(i);
+                // AI helped with (
+                ball.setHealth(ballHeath);
+                // )
+
+                println("health:", ballHeath, "gameOver:", gameOver);
+
+                println("HP decreased! HP = " + ballHeath);
+            }
+
+        }
+        // if (distanceFromBullet < / 2) {
+        // ballHeath--;
+        // System.out.println("hp decreased");
         // }
     }
-    
+
     public void settings() {
         // screen size
         size(1000, 600);
     }
 
     public void draw() {
-        death();
+
         if (frameCount % 100 == 0) {
             print("100 frames have passed");
             Bullets();
@@ -89,22 +110,24 @@ public class App extends PApplet {
         // creates floor and ball
         fill(0, 0, 0);
         rect(0, 550, 1000, 50);
-        fill(0, 255, 0);
-        for (Ball b : balls) {
-            b.display();
-        }
+
+        ball.display();
+        ball.updateColor();
+        ball.update();
+
         // bullets.get(0).update();
         // bullets.get(1).update();
         // bullets.get(2).update();
         // bullets.get(3).update();
         // System.out.println(bullets.size());
         // if (bull = true) {
-        for (Bullet b : bullets) {
-            // System.out.println("bullet move");
-            b.update();
-            b.display();
 
+        // System.out.println("bullet move");
+        for (Bullet b : bullets) {
+            b.display();
+            b.update();
         }
+
         // }
         timer = millis() - begin;
         timer = ((int) timer / 100) / 10.0;
@@ -113,13 +136,36 @@ public class App extends PApplet {
         if (timer == 1) {
 
         }
+        text(ballHeath + " HP left", 100, 50);
+        death();
+        if (ballHeath <= 0) {
+            gameOver = true;
+        }
+        if (gameOver == true) {
+            bullets.clear();
+            fill(255, 0, 0);
+            textSize(89);
+            background(0);
+            text("GAME OVER", 300, 300);
+            textSize(19);
+            fill(250, 250, 250);
+            text("use the button g insead of space for a intense challenge", 400, 150);
 
+        }
+        fill(0, 0, 255);
+        text("click b to restart", 400, 580);
+        if (space = true) {
+            fill(255, 0, 255);
+            text("click space to move", 400, 60);
+        }
     }
 
     public void keyPressed() {
         // detects when key pressed and then moves the ball
         if (key == ' ') {
-            balls.get(0).move();
+            ball.move();
+            space = false;
+
             // y -= speed;
             // if (y < 440) {
             // y = 440;
@@ -129,31 +175,45 @@ public class App extends PApplet {
             // bullets.get(2).update();
             // bullets.get(3).update();
         }
+        if (key == 'b') {
+            restartGame();
+
+        }
+        if (key == 'g') {
+            ball.move();
+            space = false;
+
+            if (frameCount % 30 == 0) {
+                print("30 frames have passed");
+                Bullets();
+            }
+        }
 
     }
 
     public void keyReleased() {
         // knows when key released and stops movement
         if (key == ' ') {
-            space = false;
             y = 530;
 
         }
+
     }
 
-    public void readHighScore() {
-        // high score creation
-        try (Scanner scanner = new Scanner(Paths.get("highscore.txt"))) {
-            // we read the file until all lines have been read
-            while (scanner.hasNextLine()) {
-                // we read one line
-                String row = scanner.nextLine();
-                // we print the line that we read
-                highScore = Double.valueOf(row);
-            }
-        } catch (Exception e) {
-            System.out.println("Error: " + e.getMessage());
-        }
-    }
+    // public void readHighScore() {
+    // // high score creation
+    // try (Scanner scanner = new Scanner(Paths.get("highscore.txt"))) {
+    // // we read the file until all lines have been read
+    // while (scanner.hasNextLine()) {
+    // // we read one line
+    // String row = scanner.nextLine();
+    // // we print the line that we read
+    // highScore = Double.valueOf(row);
+    // }
+    // } catch (Exception e) {
+    // System.out.println("Error: " + e.getMessage());
+    // }
+    // }
+    // did not have time to finish but might comeback and finish for fun
 
 }
